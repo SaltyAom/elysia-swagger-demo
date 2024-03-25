@@ -1,55 +1,68 @@
-name: deploys
+name: Deployments
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  pages: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
 
 jobs:
-  mirror:
+  containers:
     runs-on: ubuntu-latest
     env:
-      APP_NAME: swagger-demo
-      IMAGE_NAME: ghcr.io/saltyaom/swagger-demo
+      NAME: swagger-demo
 
     steps:
-    - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 3
+      - name: node
+        uses: actions/setup-node@v3
 
-    - name: node
-      uses: actions/setup-node@v3
+      - name: buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: buildx
-      uses: docker/setup-buildx-action@v2
+      - id: string
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ github.repository }}
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: saltyaom
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build Docker image
-      run: docker build -t $APP_NAME .
+      - name: Build Docker image
+        run: docker build -t $NAME .
 
-    - name: Tag Docker image
-      run: docker tag $APP_NAME $IMAGE_NAME
+      - name: Tag Docker image
+        run: docker tag $NAME ghcr.io/saltyaom/${{ env.NAME }}
 
-    - name: build
-      uses: docker/build-push-action@v4
-      with:
-        file: Dockerfile
-        push: true
-        tags: ghcr.io/saltyaom/${{ env.NAME }}-${{ steps.string.outputs.lowercase }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+      - name: Push Docker image
+        run: docker push $NAME
 
-    - uses: deploys-app/deploys-action@v1
-      with:
-        project: ${{ secrets.DEPLOYS_NAME }}
-        location: gke.cluster-rcf2
-        name: ${{ env.NAME }}
-        image: ${{ env.IMAGE_NAME }}
-        minReplicas: 2
-        maxReplicas: 20
-      env:
-        DEPLOYS_AUTH_USER: ${{ secrets.DEPLOYS_AUTH_USER }}
-        DEPLOYS_AUTH_PASS: ${{ secrets.DEPLOYS_AUTH_PASS }}
+      - name: publish
+        uses: deploys-app/deploys-action@v1
+        with:
+          project: ${{ secrets.DEPLOYS_NAME }}
+          location: gke.cluster-rcf2
+          name: ${{ matrix.context }}
+          image: ghcr.io/saltyaom/${{ env.NAME }}
+          minReplicas: 2
+          maxReplicas: 20
+          port: 3000
+        env:
+          DEPLOYS_AUTH_USER: ${{ secrets.DEPLOYS_AUTH_USER }}
+          DEPLOYS_AUTH_PASS: ${{ secrets.DEPLOYS_AUTH_PASS }}
