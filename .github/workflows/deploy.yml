@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        context: [swagger-demo]
+        context: [bebe]
 
     steps:
       - name: checkout
