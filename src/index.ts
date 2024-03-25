@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { swagger } from '@elysiajs/swagger'
+import { cors } from '@elysiajs/cors'
 
 const app = new Elysia({
     cookie: {
@@ -7,6 +8,9 @@ const app = new Elysia({
         sign: true
     }
 })
+    .headers({
+        'Content-Security-Policy': "frame-ancestors 'self' https://elysiajs.com;"
+    })
     .use(swagger())
     .model({
         sign: t.Object(
