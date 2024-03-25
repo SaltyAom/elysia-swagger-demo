@@ -62,7 +62,6 @@ jobs:
           image: ghcr.io/saltyaom/${{ steps.string.outputs.lowercase }}-${{ env.NAME }}
           minReplicas: 2
           maxReplicas: 20
-          port: 3000
         env:
           DEPLOYS_AUTH_USER: ${{ secrets.DEPLOYS_AUTH_USER }}
           DEPLOYS_AUTH_PASS: ${{ secrets.DEPLOYS_AUTH_PASS }}
