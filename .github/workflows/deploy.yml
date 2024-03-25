@@ -38,7 +38,7 @@ jobs:
       with:
         file: Dockerfile
         push: true
-        tags: ghcr.io/saltyaom/${{ env.NAME }}:${{ steps.string.outputs.lowercase }}
+        tags: ghcr.io/saltyaom/${{ env.NAME }}-${{ steps.string.outputs.lowercase }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
