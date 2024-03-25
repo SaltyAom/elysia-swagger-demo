@@ -1,5 +1,11 @@
 name: deploys
 
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  pages: write
+
 on:
   push:
     branches: [ main ]
